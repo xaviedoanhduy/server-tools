@@ -30,6 +30,7 @@
         "report_action/partner_list/report_partner_list.xml",
         "report_action/partner_list/security/ir.model.access.csv",
     ],
+    "post_init_hook": "post_init_hook",
     "installable": True,
     "development_status": "Beta",
     "maintainers": ["kittiu"],
