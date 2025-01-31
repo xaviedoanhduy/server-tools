@@ -3,3 +3,4 @@ astor
 dataclasses
 odoorpc
 openupgradelib
+sentry_sdk>=2.0.0
