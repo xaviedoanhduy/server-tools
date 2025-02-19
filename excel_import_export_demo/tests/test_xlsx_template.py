@@ -3,7 +3,7 @@
 from ast import literal_eval
 
 from odoo.exceptions import UserError
-from odoo.tests.common import Form
+from odoo.tests import Form
 
 from .test_common import TestExcelImportExport
 
