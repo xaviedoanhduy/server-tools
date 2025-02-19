@@ -13,8 +13,7 @@
                 <group>
                     <field name="team_id" />
                 </group>
-                <group>
-                </group>
+                <group />
             </xpath>
         </field>
     </record>

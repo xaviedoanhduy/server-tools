@@ -3,7 +3,6 @@
   Copyright 2019 Ecosoft Co., Ltd.
   License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl.html).-->
 <odoo>
-
     <record id="action_purchase_order_import_xlsx" model="ir.actions.act_window">
         <field name="name">Import Excel</field>
         <field name="res_model">import.xlsx.wizard</field>
@@ -22,5 +21,4 @@
             }
         </field>
     </record>
-
 </odoo>

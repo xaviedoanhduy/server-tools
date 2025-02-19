@@ -8,7 +8,7 @@ from .test_common import TestExcelImportExport
 class TestXLSXReport(TestExcelImportExport):
     @classmethod
     def setUpClass(cls):
-        super(TestXLSXReport, cls).setUpClass()
+        super().setUpClass()
 
     def test_xlsx_report(self):
         """Test Report from Sales Order"""
