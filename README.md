@@ -36,6 +36,7 @@ addon | version | maintainers | summary
 [dbfilter_from_header](dbfilter_from_header/) | 18.0.1.0.0 |  | Filter databases with HTTP headers
 [jsonifier](jsonifier/) | 18.0.1.0.0 |  | JSON-ify data for all models
 [mail_cleanup](mail_cleanup/) | 18.0.1.0.0 |  | Mark as read or delete mails after a set time
+[module_auto_update](module_auto_update/) | 18.0.1.0.0 |  | Automatically update Odoo modules
 [module_change_auto_install](module_change_auto_install/) | 18.0.1.0.1 | [![legalsylvain](https://github.com/legalsylvain.png?size=30px)](https://github.com/legalsylvain) | Customize auto installables modules by configuration
 [onchange_helper](onchange_helper/) | 18.0.1.0.0 |  | Technical module that ease execution of onchange in Python code
 [rpc_helper](rpc_helper/) | 18.0.1.0.1 | [![simahawk](https://github.com/simahawk.png?size=30px)](https://github.com/simahawk) | Helpers for disabling RPC calls
