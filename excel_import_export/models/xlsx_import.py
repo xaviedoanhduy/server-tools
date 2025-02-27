@@ -241,36 +241,16 @@ class XLSXImport(models.AbstractModel):
         if not data_dict:
             return
         try:
-            header_fields = []
             model = record._name
-            xml_id = (
-                record
-                and self.get_external_id(record)
-                or "{}.{}".format("__excel_import_export__", uuid.uuid4())
-            )
+            xml_id = self._generate_xml_id(record)
             decoded_data = base64.decodebytes(import_file)
             out_wb = xlwt.Workbook()
             out_st = out_wb.add_sheet("Sheet 1")
             out_st.write(0, 0, "id")
             out_st.write(1, 0, xml_id)
-            header_fields.append("id")
-            is_xlsx = False
-            if xlrd and parse_version(xlrd.__VERSION__) < parse_version("2.0"):
-                wb = xlrd.open_workbook(file_contents=decoded_data)
-            else:
-                try:
-                    import io
-
-                    from openpyxl import load_workbook
-
-                    wb = load_workbook(io.BytesIO(decoded_data or b""), data_only=True)
-                    is_xlsx = True
-                except Exception as exc:
-                    raise ValidationError(
-                        self.env._(
-                            "Invalid file style, only .xls or .xlsx file allowed"
-                        )
-                    ) from exc
+            header_fields = ["id"]
+            is_xlsx = self._is_xlsx_file()
+            wb = self._load_workbook(decoded_data, is_xlsx)
             # Process on all worksheets
             self._process_worksheet(
                 wb, out_st, model, data_dict, header_fields, is_xlsx
@@ -280,40 +260,10 @@ class XLSXImport(models.AbstractModel):
             content.seek(0)  # Set index to 0, and start reading
             xls_file = content.read()
             # Do the import
-            Import = self.env["base_import.import"]
-            imp = Import.create(
-                {
-                    "res_model": model,
-                    "file": xls_file,
-                    "file_type": "application/vnd.ms-excel",
-                    "file_name": "temp.xls",
-                }
-            )
-            errors = imp.execute_import(
-                header_fields,
-                header_fields,
-                {
-                    "has_headers": True,
-                    "advanced": True,
-                    "keep_matches": False,
-                    "encoding": "",
-                    "separator": "",
-                    "quoting": '"',
-                    "date_format": "%Y-%m-%d",
-                    "datetime_format": "%Y-%m-%d %H:%M:%S",
-                    "float_thousand_separator": ",",
-                    "float_decimal_separator": ".",
-                    "fields": [],
-                },
-            )
+            imp = self._create_import_record(model, xls_file)
+            errors = self._execute_import(imp, header_fields)
             if errors.get("messages"):
-                message = self.env._("Error importing data")
-                messages = errors["messages"]
-                if isinstance(messages, dict):
-                    message = messages["message"]
-                if isinstance(messages, list):
-                    message = ", ".join([x["message"] for x in messages])
-                raise ValidationError(message.encode("utf-8"))
+                self._handle_import_errors(errors)
             return self.env.ref(xml_id)
         except xlrd.XLRDError as exc:
             raise ValidationError(
@@ -321,6 +271,71 @@ class XLSXImport(models.AbstractModel):
             ) from exc
         except Exception as e:
             raise e
+
+    def _generate_xml_id(self, record):
+        return (
+            record
+            and self.get_external_id(record)
+            or "{}.{}".format("__excel_import_export__", uuid.uuid4())
+        )
+
+    def _is_xlsx_file(self):
+        if xlrd and parse_version(xlrd.__VERSION__) < parse_version("2.0"):
+            return False
+        return True
+
+    def _load_workbook(self, decoded_data, is_xlsx):
+        if not is_xlsx:
+            return xlrd.open_workbook(file_contents=decoded_data)
+        try:
+            import io
+
+            from openpyxl import load_workbook
+
+            return load_workbook(io.BytesIO(decoded_data or b""), data_only=True)
+        except Exception as exc:
+            raise ValidationError(
+                self.env._("Invalid file style, only .xls or .xlsx file allowed")
+            ) from exc
+
+    def _create_import_record(self, model, xls_file):
+        Import = self.env["base_import.import"]
+        return Import.create(
+            {
+                "res_model": model,
+                "file": xls_file,
+                "file_type": "application/vnd.ms-excel",
+                "file_name": "temp.xls",
+            }
+        )
+
+    def _execute_import(self, imp, header_fields):
+        return imp.execute_import(
+            header_fields,
+            header_fields,
+            {
+                "has_headers": True,
+                "advanced": True,
+                "keep_matches": False,
+                "encoding": "",
+                "separator": "",
+                "quoting": '"',
+                "date_format": "%Y-%m-%d",
+                "datetime_format": "%Y-%m-%d %H:%M:%S",
+                "float_thousand_separator": ",",
+                "float_decimal_separator": ".",
+                "fields": [],
+            },
+        )
+
+    def _handle_import_errors(self, errors):
+        message = self.env._("Error importing data")
+        messages = errors["messages"]
+        if isinstance(messages, dict):
+            message = messages["message"]
+        if isinstance(messages, list):
+            message = ", ".join([x["message"] for x in messages])
+        raise ValidationError(message.encode("utf-8"))
 
     @api.model
     def _post_import_operation(self, record, operation):
